@@ -27,6 +27,13 @@ from models import ProfileMiniForm
 from models import ProfileForm
 from models import TeeShirtSize
 
+import json
+import os
+import time
+import uuid
+
+from google.appengine.api import urlfetch
+
 from settings import WEB_CLIENT_ID
 
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
@@ -70,19 +77,21 @@ class ConferenceApi(remote.Service):
         #         and import getUserId from it
         # step 2. get user id by calling getUserId(user)
         # step 3. create a new key of kind Profile from the id
-
+        user_id = getUserId(user)
+        p_key = ndb.Key(Profile, user_id)
         # TODO 3
         # get the entity from datastore by using get() on the key
-        profile = None
+        profile = p_key.get()
         if not profile:
             profile = Profile(
-                key = None, # TODO 1 step 4. replace with the key from step 3
+                key = p_key, # TODO 1 step 4. replace with the key from step 3
                 displayName = user.nickname(), 
                 mainEmail= user.email(),
                 teeShirtSize = str(TeeShirtSize.NOT_SPECIFIED),
             )
             # TODO 2
             # save the profile to datastore
+            profile.put()
 
         return profile      # return Profile
 
@@ -101,6 +110,7 @@ class ConferenceApi(remote.Service):
                         setattr(prof, field, str(val))
             # TODO 4
             # put the modified profile to datastore
+            prof.put()
 
         # return ProfileForm
         return self._copyProfileToForm(prof)
@@ -118,6 +128,45 @@ class ConferenceApi(remote.Service):
     def saveProfile(self, request):
         """Update & return user profile."""
         return self._doProfile(request)
+
+
+def getUserId(user, id_type="email"):
+    if id_type == "email":
+        return user.email()
+
+    if id_type == "oauth":
+        """A workaround implementation for getting userid."""
+        auth = os.getenv('HTTP_AUTHORIZATION')
+        bearer, token = auth.split()
+        token_type = 'id_token'
+        if 'OAUTH_USER_ID' in os.environ:
+            token_type = 'access_token'
+        url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?%s=%s'
+               % (token_type, token))
+        user = {}
+        wait = 1
+        for i in range(3):
+            resp = urlfetch.fetch(url)
+            if resp.status_code == 200:
+                user = json.loads(resp.content)
+                break
+            elif resp.status_code == 400 and 'invalid_token' in resp.content:
+                url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?%s=%s'
+                       % ('access_token', token))
+            else:
+                time.sleep(wait)
+                wait = wait + i
+        return user.get('user_id', '')
+
+    if id_type == "custom":
+        # implement your own user_id creation and getting algorythm
+        # this is just a sample that queries datastore for an existing profile
+        # and generates an id if profile does not exist for an email
+        profile = Conference.query(Conference.mainEmail == user.email())
+        if profile:
+            return profile.id()
+        else:
+            return str(uuid.uuid1().get_hex())
 
 
 # registers API

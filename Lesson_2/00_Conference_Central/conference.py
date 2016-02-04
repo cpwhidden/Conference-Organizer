@@ -67,13 +67,14 @@ class ConferenceApi(remote.Service):
         ## TODO 2
         ## step 1: make sure user is authed
         ## uncomment the following lines:
-        # user = endpoints.get_current_user()
-        # if not user:
-        #     raise endpoints.UnauthorizedException('Authorization required')
+        user = endpoints.get_current_user()
+        if not user:
+             raise endpoints.UnauthorizedException('Authorization required')
         profile = None
         ## step 2: create a new Profile from logged in user data
         ## you can use user.nickname() to get displayName
         ## and user.email() to get mainEmail
+        profile = Profile(displayName = user.nickname(), mainEmail = user.email())
         if not profile:
             profile = Profile(
                 userId = None,
@@ -112,11 +113,11 @@ class ConferenceApi(remote.Service):
     # TODO 1
     # 1. change request class
     # 2. pass request to _doProfile function
-    @endpoints.method(message_types.VoidMessage, ProfileForm,
+    @endpoints.method(ProfileMiniForm, ProfileForm,
             path='profile', http_method='POST', name='saveProfile')
     def saveProfile(self, request):
         """Update & return user profile."""
-        return self._doProfile()
+        return self._doProfile(request)
 
 
 # registers API
