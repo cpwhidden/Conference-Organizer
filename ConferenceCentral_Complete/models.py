@@ -27,6 +27,7 @@ class Profile(ndb.Model):
     mainEmail = ndb.StringProperty()
     teeShirtSize = ndb.StringProperty(default='NOT_SPECIFIED')
     conferenceKeysToAttend = ndb.StringProperty(repeated=True)
+    sessionWishlist = ndb.KeyProperty(kind='Session', repeated=True)
 
 class ProfileMiniForm(messages.Message):
     """ProfileMiniForm -- update Profile form message"""
@@ -107,4 +108,44 @@ class ConferenceQueryForm(messages.Message):
 class ConferenceQueryForms(messages.Message):
     """ConferenceQueryForms -- multiple ConferenceQueryForm inbound form message"""
     filters = messages.MessageField(ConferenceQueryForm, 1, repeated=True)
+
+class Speaker(ndb.Model):
+    """Speaker -- Speaker object"""
+    name = ndb.StringProperty()
+
+class SessionType(messages.Enum):
+    """SessionType -- enumeration value for session type"""
+    Lecture = 1
+    Workshop = 2
+    Other = 3
+    Keynote = 4
+
+class Session(ndb.Model):
+    """Session -- Session Object"""
+    conferenceId = ndb.KeyProperty(kind=Conference)
+    name = ndb.StringProperty(required=True)
+    highlights = ndb.StringProperty()
+    speaker = ndb.KeyProperty(kind=Speaker)
+    duration = ndb.FloatProperty()
+    typeOfSession = ndb.StringProperty(default='Other')
+    date = ndb.DateProperty()
+    startTime = ndb.TimeProperty()
+
+class SessionForm(messages.Message):
+    """SessionForm -- getSessionsBySpeker outbound form"""
+    conferenceId = messages.StringField(1)
+    name = messages.StringField(2)
+    highlights = messages.StringField(3)
+    speaker = messages.StringField(4)
+    duration = messages.FloatField(5)
+    typeOfSession = messages.EnumField('SessionType', 6)
+    date = messages.StringField(7)
+    startTime = messages.StringField(8)
+    websafeKey = messages.StringField(9)
+
+
+class SessionForms(messages.Message):
+    """SessionForms -- getConferenceSessions outbound form message"""
+    items = messages.MessageField(SessionForm, 1, repeated=True)
+
 

@@ -1,4 +1,7 @@
-ud858
-=====
+Conference Central
+==================
 
-Course code for Building Scalable Apps with Google App Engine in Python class
+# Session and Speaker model classes design rationale
+My Session class has a property for a speaker which points to its own Speaker object.  Also it’s fine to just include the speaker as a String property, having a speaker will also for more accurate statistics.  For example, querying across multiple conferences to see how many times a speaker has hosted sessions.  Also, speakers with the same name can be differentiated because they each have a unique key.
+
+I have the type of session as an enum property.  There are a few different options for handling this property.  I could have just left it as a string property that leaves it up the session creator to define.  This gives a lot of flexibility to the session creator by enabling them to define whatever types they want.  However, if different session creators use a slightly different name (or even a different capitalization), then some queries might provide unexpected and inaccurate results.  I chose to create an enum property that allows for a set number of options.  This is good for queries, but doesn’t give good flexibility to session creators.  I think a good third option would be to enable conference creators to define their own set of session types that session makers would follow.  Conference creators would have the flexibility to define whatever session types they want, but session creators would have to follow those types, which would lead to more accurate queries.  However, that would add another level of complexity that I thought was out-of-scope for this project.
