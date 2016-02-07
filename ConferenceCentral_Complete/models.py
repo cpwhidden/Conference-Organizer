@@ -113,6 +113,11 @@ class Speaker(ndb.Model):
     """Speaker -- Speaker object"""
     name = ndb.StringProperty()
 
+class SpeakerForm(messages.Message):
+    """SpeakerForm -- Speaker form"""
+    name = messages.StringField(1)
+    websafeKey = messages.StringField(2)
+
 class SessionType(messages.Enum):
     """SessionType -- enumeration value for session type"""
     Lecture = 1

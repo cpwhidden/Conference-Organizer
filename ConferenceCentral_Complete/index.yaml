@@ -97,8 +97,5 @@ indexes:
 
 - kind: Session
   properties:
-  - name: typeOfSession
-
-- kind: Session
-  properties:
   - name: speaker
+  - name: date
